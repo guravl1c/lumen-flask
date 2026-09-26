@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.spec.bak
+venv/
+.venv/
+env/
+
+# Бинарники
+*.exe
+*.dll
+bin/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log
+tmp/

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Диагностика доступов</title>
+<link rel="stylesheet" href="/static/background.css">
+<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+
+  <header>
+    <h1>📡 Диагностика доступов</h1>
+    <div class="header-right">
+      <a class="btn-invite" onclick="goBack()" style="cursor:pointer;">← К панели учителя</a>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">🌗</button>
+    </div>
+  </header>
+
+  <p class="sub" style="margin-bottom: 16px;">
+    Все доступные адреса для учеников. Проверка каждые 30 секунд.
+  </p>
+
+  <div id="status-container" class="diag-container">
+    <p class="sub">Загружаю…</p>
+  </div>
+
+  <div class="diag-actions">
+    <button class="btn-invite" onclick="loadStatus()">🔄 Проверить сейчас</button>
+    <span class="sub" id="last-check">—</span>
+  </div>
+
+  <section class="advice" style="margin-top: 24px;">
+    <h3>💡 Какой адрес давать ученикам</h3>
+    <ol style="margin: 0; padding-left: 20px; color: #cfd3e3; line-height: 1.7;">
+      <li><b>🚀 CloudPub</b> — основной. Работает из любой сети <b>без VPN</b>.</li>
+      <li><b>🌍 Ngrok</b> — резерв. Требует VPN у учеников.</li>
+      <li><b>🏠 Локальная сеть</b> — для офлайн-класса. Без интернета.</li>
+    </ol>
+  </section>
+
+  <section class="advice" style="margin-top: 16px;">
+    <h3>📱 QR для резервного входа (локальный IP)</h3>
+    <p class="sub">Если CloudPub и Ngrok не работают — ученики подключаются к вашей Wi-Fi и сканируют этот QR</p>
+    <div class="qr-box" style="margin-top: 12px;">
+      <img id="fallback-qr" src="/qr-fallback?t=0" alt="QR резервного входа" />
+    </div>
+  </section>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+    }
+
+    function goBack() {
+      if (document.referrer && document.referrer.includes('/teacher')) {
+        window.history.back();
+      } else {
+        window.location.href = '/teacher';
+      }
+    }
+
+    async function loadStatus() {
+      const container = document.getElementById('status-container');
+      try {
+        const r = await fetch('/api/status?t=' + Date.now());
+        const data = await r.json();
+        renderStatus(data.addresses);
+        document.getElementById('last-check').textContent =
+          'Обновлено: ' + new Date().toLocaleTimeString();
+      } catch (e) {
+        container.innerHTML = '<p class="err">Ошибка: ' + e.message + '</p>';
+      }
+    }
+
+    function renderStatus(addresses) {
+      const container = document.getElementById('status-container');
+      container.innerHTML = '';
+      addresses.forEach(a => {
+        const row = document.createElement('div');
+        row.className = 'diag-row' + (a.available ? ' available' : ' unavailable');
+        const statusIcon = a.available ? '✓' : '✕';
+        const statusClass = a.available ? 'ok' : 'fail';
+        row.innerHTML = `
+          <div class="diag-status ${statusClass}">${statusIcon}</div>
+          <div class="diag-info">
+            <div class="diag-label">${a.label}</div>
+            <div class="diag-url">${a.url || '— недоступно —'}</div>
+            <div class="diag-note">${a.note}</div>
+          </div>
+          <div class="diag-actions-col">
+            ${a.url && a.available ? `
+              <button class="btn-invite" onclick="copyUrl('${a.url}')">📋 Копировать</button>
+              <button class="btn-invite btn-invite-alt" onclick="openUrl('${a.url}')">🚀 Открыть</button>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function copyUrl(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Скопировано:\n' + url);
+      }).catch(() => {
+        prompt('Скопируй вручную:', url);
+      });
+    }
+
+    function openUrl(url) {
+      window.open(url + '/teacher', '_blank');
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 30000);
+    document.getElementById('fallback-qr').src = '/qr-fallback?t=' + Date.now();
+  </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Lumen</title>
+<link rel="stylesheet" href="/static/background.css">
+<link rel="stylesheet" href="/static/style.css"></head>
+<body>
+  <div class="bg-mesh">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="bg-particles">
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  </div>
+
+  <div class="lumen-content center">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">🌗</button>
+
+    <div class="logo-big">💡</div>
+    <h1>Lumen</h1>
+    <p class="sub">Illuminate understanding</p>
+    <p class="sub-small">Формирующее оценивание в реальном времени</p>
+
+    <div class="row">
+      <a class="btn big" href="/teacher">Я учитель</a>
+      <a class="btn big alt" href="/student">Я ученик</a>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme',
+        document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+    }
+  </script>
+</body>
+</html>

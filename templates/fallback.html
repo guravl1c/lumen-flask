@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Резервный вход</title>
+<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body class="center">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">🌗</button>
+
+  <h1>🔒 Резервный вход</h1>
+  <p class="sub">Ngrok недоступен. Используйте локальный адрес:</p>
+
+  <div class="card" style="background: #1a1f38; padding: 24px; border-radius: 16px; max-width: 500px;">
+    <p style="margin: 0 0 16px; font-size: 14px; color: #9aa0b4;">
+      Если вы ученик — откройте эту ссылку в браузере телефона:
+    </p>
+    <div style="font-family: Consolas, monospace; font-size: 18px; color: #7dffb0; word-break: break-all; margin-bottom: 16px; padding: 12px; background: #0f1220; border-radius: 10px;">
+      http://{{ local_ip }}:5000/student
+    </div>
+    <button class="btn-invite" onclick="copyLocal()" style="width: 100%;">📋 Скопировать адрес</button>
+  </div>
+
+  <p class="sub" style="margin-top: 24px; font-size: 13px;">
+    💡 Устройство должно быть подключено к той же Wi-Fi сети, что и компьютер учителя.
+  </p>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme',
+        document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+    }
+
+    function copyLocal() {
+      const url = 'http://{{ local_ip }}:5000/student';
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Скопировано:\n' + url);
+      }).catch(() => {
+        prompt('Скопируй вручную:', url);
+      });
+    }
+  </script>
+</body>
+</html>

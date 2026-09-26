@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Вход в Lumen</title>
+<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body class="center">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">🌗</button>
+
+  {% if error %}
+    <h1>😕 Ой</h1>
+    <p class="err">{{ error }}</p>
+    <a class="btn" href="/">На главную</a>
+  {% else %}
+    <h1>💡 Lumen</h1>
+    <p class="sub">Код комнаты: <b>{{ code }}</b></p>
+    <form method="post" action="/join/{{ token }}/enter" class="card">
+      <input name="name" placeholder="Фамилия Имя" required autofocus>
+      <button type="submit">Войти в класс</button>
+    </form>
+  {% endif %}
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme',
+        document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+    }
+  </script>
+</body>
+</html>

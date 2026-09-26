@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Lumen</title>
+<link rel="stylesheet" href="/static/background.css">
+<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"></head>
+<body class="student-body">
+
+  <!-- ====== ФОН ====== -->
+  <div class="bg-mesh">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="bg-particles">
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  </div>
+  <!-- ====== /ФОН ====== -->
+
+{% if not code %}
+  <div class="st-login">
+    <div class="st-login-logo">💡</div>
+    <h1 class="st-login-title">Lumen</h1>
+    <p class="st-login-sub">Illuminate understanding</p>
+    {% if error %}<p class="err">{{ error }}</p>{% endif %}
+    <form method="post" class="st-login-form">
+      <input name="code" placeholder="Код комнаты" required maxlength="4" class="st-input">
+      <input name="name" placeholder="Фамилия Имя" class="st-input">
+      <button type="submit" class="st-btn-primary">Войти</button>
+    </form>
+  </div>
+{% else %}
+
+  <header class="st-header">
+    <div class="st-header-left">
+      <span class="st-avatar">💡</span>
+      <span class="st-name" id="greeting">Привет!</span>
+    </div>
+    <div class="st-header-right">
+      <button class="st-icon-btn st-theory-btn" onclick="toggleTheoryPanel()" id="btn-theory-top" title="Теория" style="display:none;">
+        📖
+      </button>
+      <button class="st-icon-btn" onclick="toggleTheme()" title="Тема">🌗</button>
+    </div>
+  </header>
+
+  <div class="st-screen st-screen-waiting active" id="screen-waiting">
+    <div class="st-waiting-icon">⏳</div>
+    <div class="st-waiting-title">Ждём вопрос от учителя…</div>
+    <div class="st-waiting-sub">Как только вопрос появится, здесь появятся кнопки ответа</div>
+
+    <button class="st-big-hand" onclick="toggleHand()" id="btn-hand-waiting">
+      <span class="st-hand-icon">✋</span>
+      <span class="st-hand-text">Поднять руку</span>
+    </button>
+  </div>
+
+  <div class="st-screen st-screen-question" id="screen-question">
+    <div class="st-question-header">
+      <div class="st-question-label">Вопрос:</div>
+      <div class="st-question-text" id="question-text">—</div>
+    </div>
+
+    <div class="st-timer" id="timer-display" style="display:none;">
+      <span id="timer-num">30</span>
+    </div>
+
+  <div class="st-answers" id="answers-buttons">
+     <button class="st-answer st-answer-green" onclick="send('green')" id="btn-green">
+       <span class="st-answer-emoji" id="btn-green-emoji">✅</span>
+       <span class="st-answer-text" id="btn-green-text">Понял</span>
+       <span class="st-answer-check">✓</span>
+     </button>
+    <button class="st-answer st-answer-yellow" onclick="send('yellow')" id="btn-yellow">
+       <span class="st-answer-emoji" id="btn-yellow-emoji">🤔</span>
+       <span class="st-answer-text" id="btn-yellow-text">Почти</span>
+       <span class="st-answer-check">✓</span>
+    </button>
+    <button class="st-answer st-answer-red" onclick="send('red')" id="btn-red">
+       <span class="st-answer-emoji" id="btn-red-emoji">💥</span>
+       <span class="st-answer-text" id="btn-red-text">Потерялся</span>
+       <span class="st-answer-check">✓</span>
+    </button>
+  </div>
+
+    <div class="st-text-block" id="answers-text" style="display:none;">
+      <p class="st-hint">Твой ответ:</p>
+      <textarea id="answer-text" class="st-textarea" placeholder="Напиши, как ты понял…" maxlength="2000"></textarea>
+      <div class="st-text-footer">
+        <span id="char-count" class="st-char-count">0 / 2000</span>
+        <button class="st-btn-send" onclick="sendText()">Отправить</button>
+      </div>
+      <p id="text-hint" class="st-hint-small"></p>
+
+      <div id="voice-block" class="st-voice-block" style="display:none;">
+        <p class="st-hint">Или запиши голосовой:</p>
+        <div class="st-voice-controls">
+          <button id="btn-voice-rec" class="st-btn-voice" onclick="toggleRecording()">🎤 Записать</button>
+          <span id="voice-timer" class="st-voice-timer">0:00</span>
+        </div>
+        <audio id="voice-preview" controls style="display:none; width:100%; margin-top:8px;"></audio>
+        <button id="btn-voice-send" class="st-btn-send" onclick="sendVoice()" style="display:none; width:100%; margin-top:8px;">
+          📤 Отправить голосовой
+        </button>
+        <p id="voice-status" class="st-hint-small"></p>
+      </div>
+    </div>
+
+    <div class="st-quiz-block" id="answers-quiz" style="display:none;">
+      <div id="quiz-options" class="st-quiz-options"></div>
+      <p id="quiz-feedback" class="st-quiz-feedback"></p>
+    </div>
+
+    <div id="picked-banner" class="st-picked-banner" style="display:none;">
+      🎤 Ты отвечаешь! Расскажи классу
+    </div>
+  </div>
+
+  <div class="st-screen st-screen-answered" id="screen-answered">
+     <div class="st-answered-icon" id="answered-icon">✅</div>
+     <div class="st-answered-title" id="answered-title">Ответ отправлен!</div>
+     <div class="st-answered-sub" id="answered-text">—</div>
+     <p class="st-hint-small" id="answered-hint"></p>
+  </div>
+
+  <nav class="st-bottom-bar" id="bottom-bar">
+    <button class="st-nav-btn" onclick="togglePanel('ask')" data-panel="ask">
+      <span class="st-nav-icon">💬</span>
+      <span class="st-nav-label">Спросить</span>
+    </button>
+    <button class="st-nav-btn" onclick="toggleHand()" id="btn-hand-bottom" data-panel="hand">
+      <span class="st-nav-icon">✋</span>
+      <span class="st-nav-label">Рука</span>
+    </button>
+    <button class="st-nav-btn" onclick="toggleTheoryPanel()" data-panel="theory" id="btn-theory-bottom" style="display:none;">
+      <span class="st-nav-icon">📖</span>
+      <span class="st-nav-label">Теория</span>
+    </button>
+    <button class="st-nav-btn" onclick="togglePanel('reactions')" data-panel="reactions">
+      <span class="st-nav-icon">😀</span>
+      <span class="st-nav-label">Реакции</span>
+    </button>
+  </nav>
+
+  <div class="st-panel-backdrop" id="panel-backdrop" onclick="closePanels()"></div>
+
+  <div class="st-panel" id="panel-ask">
+    <div class="st-panel-handle"></div>
+    <h3 class="st-panel-title">💬 Спросить учителя</h3>
+    <p class="st-hint-small">Вопрос уйдёт анонимно</p>
+    <input type="text" id="student-q-input" class="st-input" placeholder="Твой вопрос…" maxlength="500">
+    <button class="st-btn-primary" onclick="sendQuestion()" style="width:100%; margin-top:12px;">Отправить</button>
+    <p id="q-status" class="st-hint-small" style="text-align:center;"></p>
+  </div>
+
+  <div class="st-panel" id="panel-reactions">
+    <div class="st-panel-handle"></div>
+    <h3 class="st-panel-title">😀 Реакция учителю</h3>
+    <div class="st-reactions-grid">
+      <button class="st-reaction-btn" onclick="sendReaction('👍')">👍</button>
+      <button class="st-reaction-btn" onclick="sendReaction('🤔')">🤔</button>
+      <button class="st-reaction-btn" onclick="sendReaction('❓')">❓</button>
+      <button class="st-reaction-btn" onclick="sendReaction('🔥')">🔥</button>
+      <button class="st-reaction-btn" onclick="sendReaction('😂')">😂</button>
+      <button class="st-reaction-btn" onclick="sendReaction('😮')">😮</button>
+      <button class="st-reaction-btn" onclick="sendReaction('👏')">👏</button>
+      <button class="st-reaction-btn" onclick="sendReaction('💡')">💡</button>
+    </div>
+  </div>
+
+  <div class="st-panel st-panel-theory" id="panel-theory">
+    <div class="st-panel-handle"></div>
+    <h3 class="st-panel-title">📖 Теория урока</h3>
+    <div id="theory-content" class="st-theory-content">
+      <p class="st-hint-small">Загрузка…</p>
+    </div>
+  </div>
+
+  <div id="new-question-banner" class="st-new-question-banner" style="display:none;" onclick="goToQuestion()">
+    <span class="st-nqb-icon">🔔</span>
+    <div class="st-nqb-content">
+      <div class="st-nqb-title">Новый вопрос от учителя!</div>
+      <div class="st-nqb-sub" id="nqb-question">—</div>
+    </div>
+    <button class="st-nqb-btn">Ответить</button>
+  </div>
+
+  <div class="st-toast" id="toast" style="display:none;">
+    <span id="toast-text"></span>
+  </div>
+
+  <script src="/static/socket.io.min.js"></script>
+  <script>
+    const CODE = "{{ code }}";
+    const NAME = "{{ name }}";
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme',
+        document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+    if (!localStorage.getItem('theme')) {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.body.classList.add('light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        localStorage.setItem('theme', 'dark');
+      }
+    } else if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+    }
+  </script>
+  <script src="/static/student.js"></script>
+{% endif %}
+</body>
+</html>
