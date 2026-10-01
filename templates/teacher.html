@@ -2,7 +2,9 @@
 <html lang="ru">
 <head><meta charset="utf-8"><title>Lumen — Панель учителя</title>
 <link rel="stylesheet" href="/static/background.css">
-<link rel="stylesheet" href="/static/style.css"></head>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/teacher-v4.css">
+</head>
 <body>
 
   <!-- ====== ФОН ====== -->
@@ -20,203 +22,240 @@
   </div>
   <!-- ====== /ФОН ====== -->
 
-  <div class="teacher-content">
+  <div class="teacher-v4">
 
-  <header>
-    <h1>💡 Lumen — Панель учителя</h1>
-    <div class="header-right">
-      <div class="code-box">Код: <b id="code">{{ code }}</b></div>
-      <a class="btn-invite btn-invite-alt" href="/diagnostics">📡</a>
-      <button class="theme-toggle" onclick="toggleTheme()">🌗</button>
+  <!-- ХЕДЕР -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">💡</div>
+      <div class="logo-text">
+        <h1>Lumen</h1>
+        <p>Illuminate understanding</p>
+      </div>
     </div>
-  </header>
+    <div class="header-right">
+      <div class="chip">Код: <b id="code">{{ code }}</b></div>
+      <button class="icon-btn" onclick="openSettings()">⚙️</button>
+    </div>
+  </div>
 
   <!-- ВКЛАДКИ -->
-  <nav class="teacher-tabs" id="teacher-tabs">
-    <button class="tab-btn active" data-tab="now" onclick="switchTab('now')">
-      🎯 Сейчас
-    </button>
-    <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
-      📜 История
-    </button>
-    <button class="tab-btn" data-tab="questions" onclick="switchTab('questions')">
+  <div class="tabs" id="teacher-tabs">
+    <button class="tab active" data-tab="now" onclick="switchTab('now')">🎯 Сейчас</button>
+    <button class="tab" data-tab="history" onclick="switchTab('history')">📜 История</button>
+    <button class="tab" data-tab="questions" onclick="switchTab('questions')">
       💬 Вопросы <span class="tab-badge" id="questions-tab-badge">0</span>
     </button>
-    <button class="tab-btn" data-tab="grades" onclick="switchTab('grades')">
-      📊 Оценки
-    </button>
-    <button class="tab-btn" data-tab="reactions" onclick="switchTab('reactions')">
-      😀 Реакции
-    </button>
-  </nav>
+    <button class="tab" data-tab="grades" onclick="switchTab('grades')">📊 Оценки</button>
+    <button class="tab" data-tab="reactions" onclick="switchTab('reactions')">😀 Реакции</button>
+  </div>
 
   <!-- ============ ВКЛАДКА "СЕЙЧАС" ============ -->
   <section class="teacher-tab-content active" id="tab-now">
 
-    <section class="invite-box">
-      <div class="invite-text">
-        <span class="invite-label">🔗 Ссылка-приглашение:</span>
-        <span class="invite-link" id="invite-link">—</span>
+    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+    <div class="panel">
+
+      <!-- Верхняя строка -->
+      <div class="context-row">
+        <div class="context-info">
+          <span>📚 <b id="mp-title-short">Материал</b> · <span id="mp-counter-short">0 из 0</span></span>
+          <!-- Выпадашка материала -->
+          <div class="dropdown" style="min-width: auto;">
+            <div class="dropdown-trigger" onclick="toggleDD(this, event)" style="padding: 6px 10px; font-size: 12px;">
+              <span id="material-trigger-label">📁 Материал не выбран</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" data-dd="material" id="material-dropdown" style="min-width: 320px;">
+              <div class="dropdown-item" style="color:#6a7290;">Материал не загружен</div>
+            </div>
+          </div>
+          <!-- Выпадашка класса -->
+          <div class="dropdown" style="min-width: auto;">
+            <div class="dropdown-trigger" onclick="toggleDD(this, event)" style="padding: 6px 10px; font-size: 12px;">
+              <span id="class-trigger-label">👥 Класс не выбран</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" data-dd="class" id="class-dropdown" style="min-width: 280px; padding: 8px;">
+              <div class="dropdown-item" style="color:#6a7290;">Класс не загружен</div>
+            </div>
+          </div>
+        </div>
+        <div class="context-actions">
+          <button class="action-btn" onclick="copyInvite()">🔗 Ссылка</button>
+          <button class="action-btn" onclick="toggleInviteQr()">📱 QR</button>
+          <button class="action-btn" onclick="toggleTheoryPanel()" id="theory-toggle-btn">📖 Теория</button>
+        </div>
       </div>
-      <div class="invite-actions">
-        <button class="btn-invite" onclick="copyInvite()">📋 Копировать</button>
-        <button class="btn-invite btn-invite-alt" onclick="toggleInviteQr()">📱 QR</button>
+
+      <!-- Ссылка-приглашение -->
+      <div class="invite-row">
+        <span class="invite-label">🔗 Ссылка:</span>
+        <span class="invite-link" id="invite-link">—</span>
+        <button class="action-btn" id="copy-invite-btn" onclick="copyInvite()">📋</button>
         <span class="invited-counter">👥 Перешли: <b id="invited-count">0</b></span>
       </div>
-      <div id="invite-qr-box" class="qr-box" style="display:none; margin-top:12px;">
-        <p class="sub">Наведи телефон → сразу форма входа</p>
-        <img id="invite-qr-img" src="" alt="QR" />
-      </div>
-    </section>
 
-    <section class="mode-panel">
-      <div class="mode-row">
-        <span class="mode-label">Режим ответа:</span>
-        <button id="mode-buttons" class="mode-btn" onclick="setMode('buttons')">🎨 Кнопки</button>
-        <button id="mode-text" class="mode-btn" onclick="setMode('text')">✍️ Текст</button>
-        <button id="mode-both" class="mode-btn" onclick="setMode('both')">🎨+✍️ Оба</button>
-        <button id="mode-quiz" class="mode-btn" onclick="setMode('quiz')">🎲 Квиз</button>
+      <!-- QR-код (скрыт) -->
+      <div id="invite-qr-box" style="display:none; margin-bottom:14px; padding:16px; background:#fff; border-radius:14px; text-align:center;">
+        <p style="color:#333; margin:0 0 8px;">Наведи телефон → сразу форма входа</p>
+        <img id="invite-qr-img" src="" alt="QR" style="width:220px; height:220px;">
       </div>
-      <div class="mode-row">
-         <span class="mode-label">Набор кнопок:</span>
-         <button id="bset-understanding" class="mode-btn active" onclick="setButtonSet('understanding')">🧠 Понял / Почти / Потерялся</button> 
-         <button id="bset-yesno" class="mode-btn" onclick="setButtonSet('yesno')">✅ Да / Нет / Не знаю</button>
-         
-      </div>
-      
-       
-      <div class="keywords-row">
-        <span class="mode-label">🔑 Ключевые слова:</span>
-        <input id="keywords-input" class="keywords-input" placeholder="гипотенуза, квадрат, площадь">
-        <button class="btn-invite" onclick="applyKeywords()">Применить</button>
-        <label class="voice-toggle">
-          <input type="checkbox" id="voice-check" onchange="toggleVoice(this.checked)">
-          <span>🎤 Голосовые</span>
-        </label>
-      </div>
-    </section>
 
-    <section id="quiz-builder" class="quiz-builder" style="display:none;">
-      <h3>🎲 Квиз-вопрос (ручной ввод)</h3>
-      <div class="quiz-row">
-        <input id="quiz-opt-0" class="quiz-input" placeholder="Вариант A">
-        <input id="quiz-opt-1" class="quiz-input" placeholder="Вариант B">
+      <!-- Строка: ключевые слова + аноним + голосовые -->
+      <div class="context-row" id="keywords-row" style="border-bottom: none; padding-bottom: 0; margin-bottom: 12px;">
+        <div class="context-info">
+          <span style="font-size: 12px; color: #9aa0b4; font-weight: 700; text-transform: uppercase;">🔑 Ответ:</span>
+          <input type="text" class="keywords-input" id="keywords-input" placeholder="гипотенуза, квадрат, площадь">
+          <button class="action-btn" onclick="applyKeywords()" title="Применить ключевые слова">✓ Применить</button>
+        </div>
+        <div class="context-actions">
+          <label class="anon-toggle">
+            <input type="checkbox" id="anon-check" onchange="setAnonymousMode(this.checked)"> 🎭 Анонимно
+          </label>
+          <label class="anon-toggle">
+            <input type="checkbox" id="voice-check" onchange="toggleVoice(this.checked)"> 🎤 Голосовые
+          </label>
+        </div>
       </div>
-      <div class="quiz-row">
-        <input id="quiz-opt-2" class="quiz-input" placeholder="Вариант C">
-        <input id="quiz-opt-3" class="quiz-input" placeholder="Вариант D">
+
+      <!-- Выпадашки: режим + набор -->
+      <div class="dd-row">
+        <div class="dd-field">
+          <span class="dd-field-label">Режим:</span>
+          <div class="dropdown">
+            <div class="dropdown-trigger" onclick="toggleDD(this, event)">
+              <span id="mode-trigger-label">🎨 Кнопки</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" data-dd="mode">
+              <div class="dropdown-item selected" data-value="buttons">🎨 Кнопки <span class="check">✓</span></div>
+              <div class="dropdown-item" data-value="text">✍️ Текст <span class="check">✓</span></div>
+              <div class="dropdown-item" data-value="both">🎨+✍️ Оба <span class="check">✓</span></div>
+              <div class="dropdown-item" data-value="quiz">🎲 Квиз <span class="check">✓</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Набор кнопок -->
+        <div class="dd-field" id="button-set-field">
+          <span class="dd-field-label">Набор:</span>
+          <div class="dropdown">
+            <div class="dropdown-trigger" onclick="toggleDD(this, event)">
+              <span id="button-set-label">🧠 Понял / Почти / Потерялся</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" data-dd="set">
+              <div class="dropdown-item selected" data-value="understanding">🧠 Понял / Почти / Потерялся <span class="check">✓</span></div>
+              <div class="dropdown-item" data-value="yesno">✅ Да / Нет / Не знаю <span class="check">✓</span></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="quiz-row">
-        <span class="mode-label">Правильный:</span>
-        <select id="quiz-correct-select" class="timer-select">
-          <option value="">Не отмечать</option>
-          <option value="0">A</option>
-          <option value="1">B</option>
-          <option value="2">C</option>
-          <option value="3">D</option>
+
+      <!-- Строка вопроса -->
+      <div class="ask-row">
+        <input type="text" id="question" placeholder="Вопрос классу…">
+        <select id="timer-select">
+          <option value="0">⏱ Без таймера</option>
+          <option value="15">⏱ 15 сек</option>
+          <option value="30" selected>⏱ 30 сек</option>
+          <option value="60">⏱ 60 сек</option>
+          <option value="120">⏱ 2 мин</option>
         </select>
+        <button class="btn btn-primary" onclick="ask()">▶️ Задать</button>
+        <button class="btn btn-ghost" onclick="clearQuestion()">✕ Завершить</button>
       </div>
-    </section>
 
-    <section id="material-panel" class="material-panel" style="display:none;">
-      <div class="mp-header">
-        <span class="mp-icon">📁</span>
-        <div class="mp-info">
-          <div class="mp-title" id="mp-title">Материал</div>
-          <div class="mp-sub" id="mp-sub">—</div>
+      <!-- Квиз-билдер -->
+      <div class="quiz-builder hidden" id="quiz-builder">
+        <div class="quiz-builder-label">🎲 Варианты ответа для квиза</div>
+        <div class="quiz-grid">
+          <input type="text" class="quiz-input" id="quiz-opt-0" placeholder="Вариант A">
+          <input type="text" class="quiz-input" id="quiz-opt-1" placeholder="Вариант B">
+          <input type="text" class="quiz-input" id="quiz-opt-2" placeholder="Вариант C">
+          <input type="text" class="quiz-input" id="quiz-opt-3" placeholder="Вариант D">
         </div>
-        <div class="mp-nav">
-          <button class="mp-nav-btn" onclick="materialPrev()" id="mp-prev-btn">← Назад</button>
-          <span class="mp-counter" id="mp-counter">0 / 0</span>
-          <button class="mp-nav-btn" onclick="materialNext()" id="mp-next-btn">Вперёд →</button>
-        </div>
-      </div>
-      <div class="mp-current">
-        <div class="mp-current-label">Текущий вопрос из материала:</div>
-        <div class="mp-current-text" id="mp-current-text">—</div>
-        <div class="mp-current-meta" id="mp-current-meta"></div>
-        <button class="mp-ask-btn" onclick="materialAsk()">▶️ Задать этот вопрос классу</button>
-      </div>
-    </section>
-
-    <section id="class-panel" class="class-panel" style="display:none;">
-      <div class="cp-header" onclick="toggleClassPanel()">
-        <span class="cp-icon">📚</span>
-        <span class="cp-title" id="cp-title">Класс</span>
-        <span class="cp-stats" id="cp-stats">0 / 0 зашли</span>
-        <span class="cp-toggle" id="cp-toggle">▼</span>
-      </div>
-      <div class="cp-body" id="cp-body" style="display:none;">
-        <div class="cp-columns">
-          <div class="cp-col">
-            <div class="cp-col-title cp-col-present">✅ Зашли (<span id="cp-present-count">0</span>)</div>
-            <div id="cp-present-list" class="cp-list"></div>
-          </div>
-          <div class="cp-col">
-            <div class="cp-col-title cp-col-absent">⏳ Не зашли (<span id="cp-absent-count">0</span>)</div>
-            <div id="cp-absent-list" class="cp-list"></div>
-          </div>
+        <div class="quiz-correct-row">
+          <span>Правильный:</span>
+          <select id="quiz-correct-select">
+            <option value="0">A</option>
+            <option value="1">B</option>
+            <option value="2">C</option>
+            <option value="3">D</option>
+          </select>
         </div>
       </div>
-    </section>
 
-    <section class="ask">
-  <input id="question" placeholder="Вопрос классу…" autofocus>
-  <select id="timer-select" class="timer-select">
-    <option value="0">⏱ Без таймера</option>
-    <option value="15">⏱ 15 сек</option>
-    <option value="30" selected>⏱ 30 сек</option>
-    <option value="60">⏱ 60 сек</option>
-    <option value="120">⏱ 2 мин</option>
-  </select>
-  <button onclick="ask()">Задать вопрос</button>
-</section>
+    </div>
 
-<button class="btn-finish-question" onclick="clearQuestion()">
-  ✕ Завершить вопрос
-</button>
+    <!-- ПРИСУТСТВИЕ (сворачиваемое) -->
+    <details class="presence">
+      <summary>👥 Присутствие и активность</summary>
+      <div class="presence-content">
+        <span class="presence-item">👥 В классе: <b id="present-count">0</b> / <b id="total-count">0</b></span>
+        <span class="presence-item">✋ Руки: <b id="hand-count">0</b></span>
+        <span class="presence-item">👀 Отвлеклись: <b id="unfocused-count">0</b></span>
+      </div>
+    </details>
 
-    <section id="current-q" class="current-q"></section>
+    <!-- СЧЁТЧИКИ + КАРТА -->
+    <div class="panel">
+      <div class="stats" id="stats-container">
+        <div class="stat-pill g" data-key="green" id="stat-g-pill">
+          <span class="emoji" id="stat-g-emoji">✅</span>
+          <span class="label" id="stat-g-label">Понял</span>
+          <span class="num" id="stat-g-num">0</span>
+        </div>
+        <div class="stat-pill y" data-key="yellow" id="stat-y-pill">
+          <span class="emoji" id="stat-y-emoji">🤔</span>
+          <span class="label" id="stat-y-label">Почти</span>
+          <span class="num" id="stat-y-num">0</span>
+        </div>
+        <div class="stat-pill r" data-key="red" id="stat-r-pill">
+          <span class="emoji" id="stat-r-emoji">💥</span>
+          <span class="label" id="stat-r-label">Потерялся</span>
+          <span class="num" id="stat-r-num">0</span>
+        </div>
+        <div class="stat-pill n" data-key="none" id="stat-n-pill">
+          <span class="emoji" id="stat-n-emoji">⏳</span>
+          <span class="label" id="stat-n-label">Ждём</span>
+          <span class="num" id="stat-n-num">0</span>
+        </div>
+      </div>
 
-    <section id="quiz-results" class="quiz-results" style="display:none;">
-      <h3>📊 Распределение ответов</h3>
-      <div id="quiz-bars" class="quiz-bars"></div>
-    </section>
+      <main id="map" class="map"></main>
 
-    <section class="picked-box" id="picked-box" style="display:none;">
-      <span class="picked-label">🎤 Отвечает:</span>
-      <span class="picked-name" id="picked-name"></span>
-      <button class="ghost-small" onclick="clearPicked()">✕</button>
-    </section>
+      <!-- Текущий вопрос -->
+      <div id="current-q" style="margin-top: 14px; padding: 12px 18px; background: rgba(15,18,32,0.6); border-radius: 12px; border-left: 4px solid #7c5cff; font-size: 14px; font-weight: 600; display: none;"></div>
 
-    <section class="legend">
-      <span class="dot green"></span> понял
-      <span class="dot yellow"></span> почти
-      <span class="dot red"></span> потерялся
-      <span class="counter" id="counter"></span>
-    </section>
+      <!-- Результаты квиза -->
+      <div id="quiz-results" style="display:none; margin-top: 14px; padding: 14px 18px; background: rgba(15,18,32,0.6); border-radius: 12px;">
+        <h3 style="margin: 0 0 12px; font-size: 14px;">📊 Распределение ответов</h3>
+        <div id="quiz-bars"></div>
+      </div>
 
-    <section class="presence-bar">
-      <span class="presence-item">👥 В классе: <b id="present-count">0</b> / <span id="total-count">0</span></span>
-      <span class="presence-item">✋ Руки: <b id="hand-count">0</b></span>
-      <span class="presence-item">👀 Отвлеклись: <b id="unfocused-count">0</b></span>
-    </section>
+      <!-- Выбранный ученик -->
+      <div class="picked-box" id="picked-box" style="display:none; margin-top: 14px; padding: 12px 18px; background: linear-gradient(90deg, #3d2a00, #4a3a10); border: 2px solid #f39c12; border-radius: 12px; align-items: center; gap: 12px;">
+        <span style="color: #f5c06b; font-weight: 600;">🎤 Отвечает:</span>
+        <span id="picked-name" style="font-size: 18px; font-weight: 800; color: #ffd47f; flex: 1;"></span>
+        <button onclick="clearPicked()" style="background: transparent; border: none; color: #f5c06b; font-size: 18px; cursor: pointer;">✕</button>
+      </div>
+    </div>
 
-    <main id="map" class="map"></main>
-
-    <section class="random-section">
-      <button class="btn-random" onclick="pickRandom('answered')">🎲 Из ответивших</button>
-      <button class="btn-random btn-random-alt" onclick="pickRandom('any')">🎲 Любого</button>
-    </section>
-
-    <section class="advice">
-      <h3>💡 Подсказка</h3>
-      <p id="advice">Задай вопрос — увидим, кто плывёт.</p>
-    </section>
-
-    <div class="action-row">
-      <button class="ghost" onclick="resetColors()">Сбросить ответы</button>
-      <button class="btn-finish" onclick="finishLesson()">📊 Завершить урок</button>
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <div class="panel">
+      <div class="bottom-row">
+        <div class="group">
+          <button class="btn btn-ghost" onclick="pickRandom('answered')">🎲 Из ответивших</button>
+          <button class="btn btn-ghost" onclick="pickRandom('any')">🎲 Любого</button>
+        </div>
+        <div class="group">
+          <button class="btn btn-ghost" onclick="resetColors()">Сбросить ответы</button>
+          <button class="btn btn-primary" onclick="finishLesson()">📊 Завершить урок</button>
+        </div>
+      </div>
+      <div class="hint">💡 Подсказка: <span id="advice">Задай вопрос — увидим, кто плывёт.</span></div>
     </div>
 
   </section>
@@ -229,7 +268,7 @@
     </div>
   </section>
 
-  <!-- ============ ВКЛАДКА "ВОПРОСЫ ОТ УЧЕНИКОВ" ============ -->
+  <!-- ============ ВКЛАДКА "ВОПРОСЫ" ============ -->
   <section class="teacher-tab-content" id="tab-questions">
     <h2 class="tab-title">💬 Вопросы от учеников</h2>
     <div id="questions-list" class="questions-list">
@@ -271,7 +310,33 @@
     </div>
   </section>
 
-  </div><!-- /.teacher-content -->
+  </div><!-- /.teacher-v4 -->
+
+  <!-- МОДАЛКА: Настройки -->
+<div id="settings-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <h2>⚙️ Настройки</h2>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size: 14px; color: #9aa0b4; margin-bottom: 10px;">Тема</h3>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-primary theme-btn-active" id="theme-dark-btn" style="flex: 1; padding: 12px;" onclick="setTheme('dark')">🌙 Тёмная</button>
+        <button class="btn-ghost" id="theme-light-btn" style="flex: 1; padding: 12px;" onclick="setTheme('light')">☀️ Светлая</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size: 14px; color: #9aa0b4; margin-bottom: 10px;">Проверка доступов</h3>
+      <div id="diagnostics-content" style="background: rgba(15,18,32,0.6); padding: 16px; border-radius: 12px; font-size: 13px; line-height: 1.8;">
+        <p class="sub">Загрузка…</p>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end;">
+      <button class="btn-ghost" style="padding: 12px 20px;" onclick="closeSettings()">Закрыть</button>
+    </div>
+  </div>
+</div>
 
   <!-- МОДАЛКА: Урок завершён -->
   <div id="summary-modal" class="modal" style="display:none;">
@@ -305,53 +370,7 @@
     const CODE = "{{ code }}";
     const INVITE_TOKEN = "{{ invite_token }}";
     const CLOUDPUB_URL = "{{ cloudpub_url }}";
-
-    function copyText(text) {
-      navigator.clipboard.writeText(text).then(() => alert('Скопировано: ' + text))
-        .catch(() => prompt('Скопируй вручную:', text));
-    }
-    function copyInvite() { copyText(window.location.origin + '/join/' + INVITE_TOKEN); }
-    function toggleInviteQr() {
-      const box = document.getElementById('invite-qr-box');
-      const img = document.getElementById('invite-qr-img');
-      if (box.style.display === 'none') {
-        img.src = '/qr-join/' + INVITE_TOKEN + '?t=' + Date.now();
-        box.style.display = 'block';
-      } else box.style.display = 'none';
-    }
-    function toggleTheme() {
-      document.body.classList.toggle('light');
-      localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-    }
-    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
-    function setMode(mode) {
-      if (window.sendMode) window.sendMode(mode);
-      const qb = document.getElementById('quiz-builder');
-      if (qb) qb.style.display = (mode === 'quiz') ? 'block' : 'none';
-    }
-    function applyKeywords() {
-      const val = document.getElementById('keywords-input').value;
-      const kws = val.split(',').map(s => s.trim()).filter(Boolean);
-      if (window.sendKeywords) window.sendKeywords(kws);
-    }
-    function toggleVoice(value) { if (window.sendVoiceEnabled) window.sendVoiceEnabled(value); }
-    document.getElementById('invite-link').textContent = window.location.origin + '/join/' + INVITE_TOKEN;
-
-    // === ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.tab === tab);
-      });
-      document.querySelectorAll('.teacher-tab-content').forEach(c => {
-        c.classList.toggle('active', c.id === 'tab-' + tab);
-      });
-      if (tab === 'grades' && window.renderGradesTable) {
-        window.renderGradesTable();
-      }
-    }
   </script>
-
-  <script src="/static/socket.io.min.js"></script>
   <script src="/static/teacher.js"></script>
 </body>
 </html>

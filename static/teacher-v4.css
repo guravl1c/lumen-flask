@@ -1,0 +1,653 @@
+/* ============================================================
+   Lumen — панель учителя v4 (новый дизайн)
+   Подключается только в teacher.html
+   ============================================================ */
+
+/* ---------- Обёртка ---------- */
+.teacher-v4 {
+  position: relative;
+  z-index: 10;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ---------- ХЕДЕР ---------- */
+.teacher-v4 .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.teacher-v4 .logo { display: flex; align-items: center; gap: 12px; }
+.teacher-v4 .logo-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #7c5cff, #4a7dff);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.5);
+}
+.teacher-v4 .logo-text h1 { font-size: 18px; font-weight: 700; margin: 0; }
+.teacher-v4 .logo-text p { font-size: 12px; color: #9aa0b4; margin: 0; }
+.teacher-v4 .header-right { display: flex; gap: 10px; align-items: center; }
+
+.teacher-v4 .chip {
+  background: rgba(26, 31, 56, 0.7);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.teacher-v4 .chip b {
+  color: #7dffb0;
+  letter-spacing: 2px;
+  font-size: 15px;
+  font-family: Consolas, monospace;
+}
+
+.teacher-v4 .icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: rgba(26, 31, 56, 0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #eaeaf0;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.teacher-v4 .icon-btn:hover { background: rgba(124, 92, 255, 0.15); }
+
+/* ---------- ВКЛАДКИ ---------- */
+.teacher-v4 .tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: rgba(15, 18, 32, 0.7);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  width: fit-content;
+  flex-wrap: wrap;
+}
+.teacher-v4 .tab {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #9aa0b4;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.teacher-v4 .tab.active {
+  background: linear-gradient(135deg, #7c5cff, #4a7dff);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(124, 92, 255, 0.4);
+}
+.teacher-v4 .tab-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- ПАНЕЛЬ ---------- */
+.teacher-v4 .panel {
+  background: rgba(20, 25, 45, 0.6);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 18px 22px;
+  margin-bottom: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+/* ---------- Строка контекста ---------- */
+.teacher-v4 .context-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 14px;
+}
+.teacher-v4 .context-info {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 14px;
+  color: #cfd3e3;
+}
+.teacher-v4 .context-info b { color: #b19dff; }
+.teacher-v4 .context-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.teacher-v4 .action-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: #cfd3e3;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.teacher-v4 .action-btn:hover {
+  background: rgba(124, 92, 255, 0.15);
+  color: #fff;
+  border-color: rgba(124, 92, 255, 0.4);
+}
+
+/* ---------- Ссылка-приглашение ---------- */
+.teacher-v4 .invite-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: rgba(124, 92, 255, 0.08);
+  border: 1px solid rgba(124, 92, 255, 0.25);
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+.teacher-v4 .invite-label {
+  font-size: 12px;
+  color: #b19dff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.teacher-v4 .invite-link {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: #cfd3e3;
+  word-break: break-all;
+  flex: 1;
+  min-width: 200px;
+}
+.teacher-v4 .invited-counter {
+  font-size: 12px;
+  color: #9aa0b4;
+  white-space: nowrap;
+}
+.teacher-v4 .invited-counter b { color: #7dffb0; font-size: 14px; }
+
+/* ---------- Ключевые слова ---------- */
+.teacher-v4 .keywords-input {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 18, 32, 0.6);
+  color: #eaeaf0;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  width: 220px;
+  transition: border-color 0.15s;
+}
+.teacher-v4 .keywords-input:focus { border-color: #7c5cff; }
+.teacher-v4 .keywords-input::placeholder { color: #6a7290; }
+
+/* ---------- Анонимный чекбокс ---------- */
+.teacher-v4 .anon-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(15, 18, 32, 0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px;
+  color: #cfd3e3;
+  cursor: pointer;
+  user-select: none;
+}
+.teacher-v4 .anon-toggle input { accent-color: #7c5cff; cursor: pointer; }
+
+/* ---------- Выпадашки ---------- */
+.teacher-v4 .dd-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  align-items: center;
+}
+.teacher-v4 .dd-field { display: flex; align-items: center; gap: 10px; }
+.teacher-v4 .dd-field-label {
+  font-size: 12px;
+  color: #9aa0b4;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  min-width: 55px;
+}
+.teacher-v4 .dropdown {
+  position: relative;
+  display: inline-block;
+  min-width: 220px;
+}
+.teacher-v4 .dropdown-trigger {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 18, 32, 0.6);
+  color: #eaeaf0;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.15s;
+  font-weight: 600;
+}
+.teacher-v4 .dropdown-trigger:hover { border-color: rgba(124, 92, 255, 0.5); }
+.teacher-v4 .dropdown.open .dropdown-trigger {
+  border-color: #7c5cff;
+  box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.15);
+}
+.teacher-v4 .dropdown-arrow {
+  color: #7c5cff;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.teacher-v4 .dropdown.open .dropdown-arrow { transform: rotate(180deg); }
+.teacher-v4 .dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: rgba(20, 25, 45, 0.98);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: all 0.15s;
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.teacher-v4 .dropdown.open .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.teacher-v4 .dropdown-item {
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: #cfd3e3;
+  transition: background 0.1s;
+}
+.teacher-v4 .dropdown-item:hover { background: rgba(124, 92, 255, 0.15); color: #fff; }
+.teacher-v4 .dropdown-item.selected {
+  background: rgba(124, 92, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+}
+.teacher-v4 .dropdown-item .check { color: #7c5cff; font-weight: 800; opacity: 0; }
+.teacher-v4 .dropdown-item.selected .check { opacity: 1; }
+
+/* ---------- Строка вопроса ---------- */
+.teacher-v4 .ask-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.teacher-v4 .ask-row input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 18, 32, 0.6);
+  color: #eaeaf0;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+.teacher-v4 .ask-row input[type="text"]:focus { border-color: #7c5cff; }
+.teacher-v4 .ask-row input[type="text"]::placeholder { color: #6a7290; }
+.teacher-v4 .ask-row select {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 18, 32, 0.6);
+  color: #eaeaf0;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.teacher-v4 .btn {
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.teacher-v4 .btn-primary {
+  background: linear-gradient(135deg, #7c5cff, #4a7dff);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(124, 92, 255, 0.4);
+}
+.teacher-v4 .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.teacher-v4 .btn-ghost {
+  background: rgba(255,255,255,0.05);
+  color: #eaeaf0;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.teacher-v4 .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+/* ---------- Скрытые поля ---------- */
+.teacher-v4 .hidden { display: none !important; }
+
+/* ---------- Квиз-билдер ---------- */
+.teacher-v4 .quiz-builder {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: rgba(124, 92, 255, 0.06);
+  border: 1px solid rgba(124, 92, 255, 0.2);
+  border-radius: 14px;
+}
+.teacher-v4 .quiz-builder-label {
+  font-size: 12px;
+  color: #b19dff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+}
+.teacher-v4 .quiz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.teacher-v4 .quiz-input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 18, 32, 0.6);
+  color: #eaeaf0;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+.teacher-v4 .quiz-input:focus { border-color: #7c5cff; }
+.teacher-v4 .quiz-correct-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: #9aa0b4;
+}
+.teacher-v4 .quiz-correct-row select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 18, 32, 0.6);
+  color: #eaeaf0;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.teacher-v4 .quiz-correct-row select:focus { border-color: #7c5cff; }
+
+/* ---------- Счётчики ---------- */
+.teacher-v4 .stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.teacher-v4 .stat-pill {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(15, 18, 32, 0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  flex: 1;
+  min-width: 130px;
+}
+.teacher-v4 .stat-pill .emoji { font-size: 18px; }
+.teacher-v4 .stat-pill .label { color: #cfd3e3; font-weight: 600; flex: 1; }
+.teacher-v4 .stat-pill .num {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: Consolas, monospace;
+  color: #eaeaf0;
+}
+.teacher-v4 .stat-pill.g { border-color: rgba(74, 222, 128, 0.3); }
+.teacher-v4 .stat-pill.g .num { color: #4ade80; }
+.teacher-v4 .stat-pill.y { border-color: rgba(250, 204, 21, 0.3); }
+.teacher-v4 .stat-pill.y .num { color: #facc15; }
+.teacher-v4 .stat-pill.r { border-color: rgba(248, 113, 113, 0.3); }
+.teacher-v4 .stat-pill.r .num { color: #f87171; }
+.teacher-v4 .stat-pill.n { border-color: rgba(154, 160, 180, 0.2); }
+.teacher-v4 .stat-pill.n .num { color: #9aa0b4; }
+
+/* ---------- Карта класса ---------- */
+.teacher-v4 .map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.teacher-v4 .student {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid;
+  transition: transform 0.15s;
+  position: relative;
+}
+.teacher-v4 .student:hover { transform: scale(1.05); }
+.teacher-v4 .student.green { background: rgba(74, 222, 128, 0.15); border-color: rgba(74, 222, 128, 0.4); color: #86efac; }
+.teacher-v4 .student.yellow { background: rgba(250, 204, 21, 0.15); border-color: rgba(250, 204, 21, 0.4); color: #fde047; }
+.teacher-v4 .student.red { background: rgba(248, 113, 113, 0.15); border-color: rgba(248, 113, 113, 0.4); color: #fca5a5; }
+.teacher-v4 .student.gray { background: rgba(154, 160, 180, 0.1); border-color: rgba(154, 160, 180, 0.3); color: #9aa0b4; }
+.teacher-v4 .student.picked {
+  border-color: #f39c12;
+  box-shadow: 0 0 0 3px #f39c12, 0 0 24px rgba(243, 156, 18, .5);
+  transform: scale(1.08);
+}
+.teacher-v4 .student.hand-raised {
+  border-color: #f1c40f;
+  box-shadow: 0 0 0 2px #f1c40f;
+}
+.teacher-v4 .student.unfocused {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+
+/* ---------- Нижняя строка ---------- */
+.teacher-v4 .bottom-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+.teacher-v4 .bottom-row .group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.teacher-v4 .hint {
+  background: rgba(124, 92, 255, 0.1);
+  border-left: 3px solid #7c5cff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #cfd3e3;
+  margin-top: 12px;
+}
+
+/* ---------- Присутствие (сворачиваемое) ---------- */
+.teacher-v4 .presence {
+  margin-bottom: 14px;
+  background: rgba(15, 18, 32, 0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.teacher-v4 .presence summary {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #9aa0b4;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.teacher-v4 .presence summary::-webkit-details-marker { display: none; }
+.teacher-v4 .presence summary::before {
+  content: '▶';
+  font-size: 10px;
+  color: #7c5cff;
+  transition: transform 0.2s;
+}
+.teacher-v4 .presence[open] summary::before { transform: rotate(90deg); }
+.teacher-v4 .presence-content {
+  padding: 0 16px 14px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.teacher-v4 .presence-item { color: #9aa0b4; }
+.teacher-v4 .presence-item b { color: #eaeaf0; font-size: 15px; }
+
+/* ---------- Класс: списки зашли/не зашли ---------- */
+.teacher-v4 .class-col-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 8px 4px 4px;
+}
+.teacher-v4 .class-col-present { color: #7dffb0; }
+.teacher-v4 .class-col-absent { color: #f5c06b; }
+.teacher-v4 .class-student-item {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.teacher-v4 .class-student-item.present {
+  color: #7dffb0;
+  border-left: 3px solid #2ecc71;
+}
+.teacher-v4 .class-student-item.absent {
+  color: #9aa0b4;
+  border-left: 3px solid #f39c12;
+  opacity: 0.7;
+}
+
+/* ---------- Светлая тема ---------- */
+body.light .teacher-v4 .panel { background: rgba(255,255,255,0.7); border-color: #d0d5e0; }
+body.light .teacher-v4 .chip { background: #fff; border-color: #d0d5e0; }
+body.light .teacher-v4 .icon-btn { background: #fff; border-color: #d0d5e0; color: #1a1d29; }
+body.light .teacher-v4 .tabs { background: rgba(255,255,255,0.8); border-color: #d0d5e0; }
+body.light .teacher-v4 .tab { color: #6a7290; }
+body.light .teacher-v4 .tab.active { color: #fff; }
+body.light .teacher-v4 .dropdown-trigger { background: #fff; color: #1a1d29; border-color: #d0d5e0; }
+body.light .teacher-v4 .dropdown-menu { background: #fff; }
+body.light .teacher-v4 .dropdown-item { color: #1a1d29; }
+body.light .teacher-v4 .ask-row input[type="text"] { background: #fff; color: #1a1d29; border-color: #d0d5e0; }
+body.light .teacher-v4 .ask-row select { background: #fff; color: #1a1d29; border-color: #d0d5e0; }
+body.light .teacher-v4 .keywords-input { background: #fff; color: #1a1d29; border-color: #d0d5e0; }
+body.light .teacher-v4 .anon-toggle { background: #fff; color: #1a1d29; }
+body.light .teacher-v4 .stat-pill { background: #fff; }
+body.light .teacher-v4 .student.gray { background: rgba(154, 160, 180, 0.1); }
+body.light .teacher-v4 .presence { background: #fff; border-color: #d0d5e0; }
+/* Кнопки в модалках (вне .teacher-v4) */
+.modal .btn-primary {
+  background: linear-gradient(135deg, #7c5cff, #4a7dff);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 6px 20px rgba(124, 92, 255, 0.4);
+  transition: all 0.15s;
+}
+.modal .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.modal .btn-ghost {
+  background: rgba(255,255,255,0.05);
+  color: #eaeaf0;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.modal .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+body.light .modal .btn-ghost {
+  background: rgba(0,0,0,0.05);
+  color: #1a1d29;
+  border-color: rgba(0,0,0,0.1);
+}
+body.light .modal .btn-ghost:hover { background: rgba(0,0,0,0.1); }
+
+/* Активная тема */
+.theme-btn-active {
+  box-shadow: 0 0 0 2px #7c5cff, 0 6px 20px rgba(124, 92, 255, 0.4) !important;
+}

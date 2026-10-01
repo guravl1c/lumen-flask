@@ -7,6 +7,7 @@ let lastSummary = null;
 let questions = [];
 let reactions = [];
 let currentMode = 'buttons';
+let currentButtonSet = 'understanding';
 let currentKeywords = [];
 let currentQuizOptions = [];
 let currentQuizCorrect = null;
@@ -27,20 +28,185 @@ let currentLessonId = null;
 socket.emit('teacher_join', { code: CODE });
 
 // ============================================
+// НАБОРЫ СЧЁТЧИКОВ
+// ============================================
+const COUNTER_SETS = {
+  understanding: {
+    g: { emoji: '✅', label: 'Понял' },
+    y: { emoji: '🤔', label: 'Почти' },
+    r: { emoji: '💥', label: 'Потерялся' },
+    n: { emoji: '⏳', label: 'Ждём' },
+  },
+  yesno: {
+    g: { emoji: '✅', label: 'Да' },
+    y: { emoji: '🤔', label: 'Нет' },
+    r: { emoji: '💥', label: 'Не знаю' },
+    n: { emoji: '⏳', label: 'Ждём' },
+  },
+  quiz: {
+    g: { emoji: '🎯', label: 'Верно' },
+    y: { emoji: '❌', label: 'Неверно' },
+    r: { emoji: '❓', label: 'Без ответа' },
+    n: { emoji: '⏳', label: 'Ждём' },
+  },
+  text: {
+    g: { emoji: '✅', label: 'Ответили' },
+    y: { emoji: '⏳', label: 'Ждём' },
+    r: { emoji: '', label: '' },
+    n: { emoji: '', label: '' },
+  },
+};
+
+function applyCounters(mode, buttonSet) {
+  let set;
+  if (mode === 'quiz') set = COUNTER_SETS.quiz;
+  else if (mode === 'text') set = COUNTER_SETS.text;
+  else set = COUNTER_SETS[buttonSet] || COUNTER_SETS.understanding;
+
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  setText('stat-g-emoji', set.g.emoji);
+  setText('stat-g-label', set.g.label);
+  setText('stat-y-emoji', set.y.emoji);
+  setText('stat-y-label', set.y.label);
+  setText('stat-r-emoji', set.r.emoji);
+  setText('stat-r-label', set.r.label);
+  setText('stat-n-emoji', set.n.emoji);
+  setText('stat-n-label', set.n.label);
+
+  const rPill = document.getElementById('stat-r-pill');
+  const nPill = document.getElementById('stat-n-pill');
+
+  if (mode === 'text') {
+    if (rPill) rPill.style.display = 'none';
+    if (nPill) nPill.style.display = 'none';
+  } else {
+    if (rPill) rPill.style.display = '';
+    if (nPill) nPill.style.display = '';
+  }
+}
+
+// ============================================
+// РЕЖИМЫ И НАБОР КНОПОК (выпадашки)
+// ============================================
+function toggleDD(trigger, e) {
+  e.stopPropagation();
+  const dd = trigger.closest('.dropdown');
+  const wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!wasOpen) dd.classList.add('open');
+}
+
+document.querySelectorAll('.dropdown-menu').forEach(menu => {
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('.dropdown-item');
+    if (!item) return;
+    e.stopPropagation();
+    const dd = menu.closest('.dropdown');
+    const text = item.textContent.replace('✓', '').trim();
+    dd.querySelector('.dropdown-trigger span:first-child').textContent = text;
+    menu.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+    item.classList.add('selected');
+    dd.classList.remove('open');
+
+    const type = menu.dataset.dd;
+    const value = item.dataset.value;
+
+    if (type === 'mode') {
+      socket.emit('set_mode', { code: CODE, mode: value });
+      currentMode = value;
+      updateModeButtons();
+      applyMode(value);
+      applyCounters(value, currentButtonSet);
+    } else if (type === 'set') {
+      socket.emit('set_button_set', { code: CODE, button_set: value });
+      currentButtonSet = value;
+      updateButtonSetButtons(value);
+      applyCounters(currentMode, value);
+    }
+    // material и class — обрабатываются отдельно (см. ниже)
+  });
+});
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+});
+
+function applyMode(mode) {
+  const buttonSetField = document.getElementById('button-set-field');
+  const quizBuilder = document.getElementById('quiz-builder');
+  const keywordsRow = document.getElementById('keywords-row');
+
+  if (mode === 'buttons' || mode === 'both') {
+    buttonSetField.classList.remove('hidden');
+  } else {
+    buttonSetField.classList.add('hidden');
+  }
+
+  if (mode === 'quiz') {
+    quizBuilder.classList.remove('hidden');
+  } else {
+    quizBuilder.classList.add('hidden');
+  }
+
+  if (mode === 'text' || mode === 'both') {
+    keywordsRow.classList.remove('hidden');
+  } else {
+    keywordsRow.classList.add('hidden');
+  }
+}
+
+function updateModeButtons() {
+  // Обновляем выпадашку режима
+  const modeLabels = {
+    buttons: '🎨 Кнопки',
+    text: '✍️ Текст',
+    both: '🎨+✍️ Оба',
+    quiz: '🎲 Квиз',
+  };
+  const el = document.getElementById('mode-trigger-label');
+  if (el) el.textContent = modeLabels[currentMode] || '🎨 Кнопки';
+
+  const menu = document.querySelector('.dropdown-menu[data-dd="mode"]');
+  if (menu) {
+    menu.querySelectorAll('.dropdown-item').forEach(i => {
+      i.classList.toggle('selected', i.dataset.value === currentMode);
+    });
+  }
+}
+
+function updateButtonSetButtons(set) {
+  const labels = {
+    understanding: '🧠 Понял / Почти / Потерялся',
+    yesno: '✅ Да / Нет / Не знаю',
+  };
+  const el = document.getElementById('button-set-label');
+  if (el) el.textContent = labels[set] || labels.understanding;
+
+  const menu = document.querySelector('.dropdown-menu[data-dd="set"]');
+  if (menu) {
+    menu.querySelectorAll('.dropdown-item').forEach(i => {
+      i.classList.toggle('selected', i.dataset.value === set);
+    });
+  }
+}
+
+// ============================================
 // МАТЕРИАЛ УРОКА
 // ============================================
 socket.on('lesson_material_update', (material) => {
-  console.log('[Материал] Событие:', material);
   if (!material || !material.material_id || !material.questions || !material.questions.length) {
     lessonMaterial = null;
-    document.getElementById('material-panel').style.display = 'none';
+    updateMaterialDropdown();
     updateTheoryButton(material);
     return;
   }
   lessonMaterial = material;
   materialIndex = 0;
-  document.getElementById('material-panel').style.display = 'block';
-  renderMaterialPanel();
+  updateMaterialDropdown();
   updateTheoryButton(material);
 });
 
@@ -48,19 +214,17 @@ async function loadLessonMaterialOnStart() {
   try {
     const res = await fetch('/api/get-lesson-material');
     const material = await res.json();
-    console.log('[Материал] Загружено с сервера:', material);
     if (material && material.material_id) {
       if (!lessonMaterial || lessonMaterial.material_id !== material.material_id) {
         lessonMaterial = material;
         materialIndex = 0;
-        document.getElementById('material-panel').style.display = 'block';
-        renderMaterialPanel();
+        updateMaterialDropdown();
       }
       updateTheoryButton(material);
       if (theoryPanelOpen) renderTheoryDrawer(material);
     } else {
       lessonMaterial = null;
-      document.getElementById('material-panel').style.display = 'none';
+      updateMaterialDropdown();
       updateTheoryButton(null);
     }
   } catch (e) {
@@ -69,46 +233,40 @@ async function loadLessonMaterialOnStart() {
 }
 setTimeout(loadLessonMaterialOnStart, 500);
 
-function renderMaterialPanel() {
-  if (!lessonMaterial) return;
-  const total = lessonMaterial.questions.length;
-  document.getElementById('mp-title').textContent = lessonMaterial.title;
-  const parts = [total + ' вопросов'];
-  if (lessonMaterial.subject) parts.push(lessonMaterial.subject);
-  if (lessonMaterial.grade) parts.push(lessonMaterial.grade);
-  document.getElementById('mp-sub').textContent = parts.join(' · ');
-  document.getElementById('mp-counter').textContent = `${materialIndex + 1} / ${total}`;
+function updateMaterialDropdown() {
+  const menu = document.getElementById('material-dropdown');
+  const label = document.getElementById('material-trigger-label');
+  const shortTitle = document.getElementById('mp-title-short');
+  const shortCounter = document.getElementById('mp-counter-short');
 
-  const q = lessonMaterial.questions[materialIndex];
-  if (!q) return;
-
-  document.getElementById('mp-current-text').textContent = q.text || '(без текста)';
-  const modeLabels = { buttons: '🎨 Кнопки', text: '✍️ Текст', quiz: '🎲 Квиз' };
-  const metaParts = [modeLabels[q.mode] || 'Кнопки'];
-  if (q.timer > 0) metaParts.push(`⏱ ${q.timer}с`);
-  if (q.mode === 'text' && q.keywords) metaParts.push(`🔑 ${q.keywords}`);
-  if (q.mode === 'quiz') {
-    try {
-      const opts = JSON.parse(q.quiz_options || '[]');
-      if (opts.length) metaParts.push(`${opts.length} вариантов`);
-    } catch (e) {}
+  if (!lessonMaterial) {
+    if (menu) menu.innerHTML = '<div class="dropdown-item" style="color:#6a7290;">Материал не загружен</div>';
+    if (label) label.textContent = '📁 Материал не выбран';
+    if (shortTitle) shortTitle.textContent = 'Материал';
+    if (shortCounter) shortCounter.textContent = '0 из 0';
+    return;
   }
-  document.getElementById('mp-current-meta').textContent = metaParts.join(' · ');
 
-  document.getElementById('mp-prev-btn').disabled = (materialIndex === 0);
-  document.getElementById('mp-next-btn').disabled = (materialIndex >= total - 1);
-}
+  if (label) label.textContent = '📁 ' + lessonMaterial.title;
+  if (shortTitle) shortTitle.textContent = lessonMaterial.title;
+  if (shortCounter) shortCounter.textContent = `${materialIndex + 1} из ${lessonMaterial.questions.length}`;
 
-function materialPrev() {
-  if (!lessonMaterial || materialIndex <= 0) return;
-  materialIndex--;
-  renderMaterialPanel();
-}
-
-function materialNext() {
-  if (!lessonMaterial || materialIndex >= lessonMaterial.questions.length - 1) return;
-  materialIndex++;
-  renderMaterialPanel();
+  if (!menu) return;
+  menu.innerHTML = '';
+  lessonMaterial.questions.forEach((q, i) => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item' + (i === materialIndex ? ' selected' : '');
+    const preview = (q.text || '').slice(0, 60) + ((q.text || '').length > 60 ? '…' : '');
+    item.innerHTML = `<span>📖 ${escapeHtml(preview)}</span><span class="check">✓</span>`;
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      materialIndex = i;
+      updateMaterialDropdown();
+      materialAsk();
+      document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+    });
+    menu.appendChild(item);
+  });
 }
 
 function materialAsk() {
@@ -120,8 +278,7 @@ function materialAsk() {
     socket.emit('set_mode', { code: CODE, mode: q.mode });
     currentMode = q.mode;
     updateModeButtons();
-    const qb = document.getElementById('quiz-builder');
-    if (qb) qb.style.display = (currentMode === 'quiz') ? 'block' : 'none';
+    applyMode(q.mode);
   }
 
   if (q.mode === 'text' && q.keywords) {
@@ -140,7 +297,7 @@ function materialAsk() {
       const corrEl = document.getElementById('quiz-correct-select');
       if (corrEl) {
         corrEl.value = (q.quiz_correct !== null && q.quiz_correct !== undefined)
-          ? String(q.quiz_correct) : '';
+          ? String(q.quiz_correct) : '0';
       }
     } catch (e) {}
   }
@@ -156,15 +313,13 @@ function materialAsk() {
 // КЛАСС УРОКА
 // ============================================
 socket.on('lesson_class_update', (cls) => {
-  console.log('[Класс] Событие:', cls);
   if (!cls || !cls.class_id || !cls.students || !cls.students.length) {
     lessonClass = null;
-    document.getElementById('class-panel').style.display = 'none';
+    updateClassDropdown();
     return;
   }
   lessonClass = cls;
-  document.getElementById('class-panel').style.display = 'block';
-  renderClassPanel();
+  updateClassDropdown();
 });
 
 async function loadLessonClassOnStart() {
@@ -173,24 +328,26 @@ async function loadLessonClassOnStart() {
     const cls = await res.json();
     if (cls && cls.class_id && cls.students && cls.students.length) {
       lessonClass = cls;
-      document.getElementById('class-panel').style.display = 'block';
-      renderClassPanel();
+      updateClassDropdown();
     } else {
       lessonClass = null;
-      document.getElementById('class-panel').style.display = 'none';
+      updateClassDropdown();
     }
   } catch (e) {}
 }
 setTimeout(loadLessonClassOnStart, 500);
 
-function toggleClassPanel() {
-  classPanelOpen = !classPanelOpen;
-  document.getElementById('cp-body').style.display = classPanelOpen ? 'block' : 'none';
-  document.getElementById('cp-toggle').textContent = classPanelOpen ? '▲' : '▼';
-}
+function updateClassDropdown() {
+  const menu = document.getElementById('class-dropdown');
+  const label = document.getElementById('class-trigger-label');
 
-function renderClassPanel() {
-  if (!lessonClass) return;
+  if (!lessonClass) {
+    if (menu) menu.innerHTML = '<div class="dropdown-item" style="color:#6a7290;">Класс не загружен</div>';
+    if (label) label.textContent = '👥 Класс не выбран';
+    return;
+  }
+
+  if (label) label.textContent = '👥 ' + lessonClass.title;
 
   const classStudents = lessonClass.students || [];
   const enteredNames = Object.values(students)
@@ -201,36 +358,32 @@ function renderClassPanel() {
   const absent = [];
   classStudents.forEach(name => {
     const norm = name.trim().toLowerCase();
-    if (enteredNames.includes(norm)) {
-      present.push(name);
-    } else {
-      absent.push(name);
-    }
+    if (enteredNames.includes(norm)) present.push(name);
+    else absent.push(name);
   });
 
-  document.getElementById('cp-title').textContent = lessonClass.title;
-  document.getElementById('cp-stats').textContent = `${present.length} / ${classStudents.length} зашли`;
-  document.getElementById('cp-present-count').textContent = present.length;
-  document.getElementById('cp-absent-count').textContent = absent.length;
-
-  const presentList = document.getElementById('cp-present-list');
-  const absentList = document.getElementById('cp-absent-list');
-
-  if (!present.length) {
-    presentList.innerHTML = '<div class="cp-empty">Пока никто не зашёл</div>';
-  } else {
-    presentList.innerHTML = present.map(n =>
-      `<div class="cp-student present">✅ ${escapeHtml(n)}</div>`
-    ).join('');
-  }
-
-  if (!absent.length) {
-    absentList.innerHTML = '<div class="cp-empty">Все на месте! 🎉</div>';
-  } else {
-    absentList.innerHTML = absent.map(n =>
-      `<div class="cp-student absent">⏳ ${escapeHtml(n)}</div>`
-    ).join('');
-  }
+  if (!menu) return;
+  menu.innerHTML = '';
+  const presentTitle = document.createElement('div');
+  presentTitle.className = 'class-col-title class-col-present';
+  presentTitle.textContent = `✅ Зашли (${present.length})`;
+  menu.appendChild(presentTitle);
+  present.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'class-student-item present';
+    el.textContent = '✅ ' + n;
+    menu.appendChild(el);
+  });
+  const absentTitle = document.createElement('div');
+  absentTitle.className = 'class-col-title class-col-absent';
+  absentTitle.textContent = `⏳ Не зашли (${absent.length})`;
+  menu.appendChild(absentTitle);
+  absent.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'class-student-item absent';
+    el.textContent = '⏳ ' + n;
+    menu.appendChild(el);
+  });
 }
 
 // ============================================
@@ -254,6 +407,17 @@ function ask() {
       alert('Заполни хотя бы 2 варианта ответа');
       return;
     }
+    if (quiz_correct === null || isNaN(quiz_correct)) {
+      alert('Укажи правильный ответ для квиза');
+      return;
+    }
+  }
+  if (currentMode === 'text' || currentMode === 'both') {
+    const kwInput = document.getElementById('keywords-input');
+    if (kwInput) {
+      const kws = kwInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      socket.emit('set_keywords', { code: CODE, keywords: kws });
+    }
   }
 
   socket.emit('new_question', {
@@ -271,12 +435,15 @@ document.getElementById('question').addEventListener('keydown', e => {
 });
 
 socket.on('question', d => {
-  document.getElementById('current-q').textContent = '📣 ' + d.question;
+  const currentQ = document.getElementById('current-q');
+  if (currentQ) {
+    currentQ.textContent = '📣 ' + d.question;
+    currentQ.style.display = 'block';
+  }
   currentQuizOptions = d.quiz_options || [];
-  currentQuizCorrect = (d.quiz_correct !== undefined && d.quiz_correct !== null) 
-    ? parseInt(d.quiz_correct) 
+  currentQuizCorrect = (d.quiz_correct !== undefined && d.quiz_correct !== null)
+    ? parseInt(d.quiz_correct)
     : null;
-  console.log('[Quiz] correct:', currentQuizCorrect);
   if (currentMode === 'quiz' && currentQuizOptions.length) {
     document.getElementById('quiz-results').style.display = 'block';
   } else {
@@ -288,7 +455,7 @@ socket.on('student_list', data => {
   students = data;
   render();
   renderQuizBars();
-  renderClassPanel();
+  updateClassDropdown();
 });
 
 socket.on('history_update', data => {
@@ -313,149 +480,96 @@ socket.on('reactions_update', data => {
 socket.on('mode_update', d => {
   currentMode = d.mode || 'buttons';
   currentKeywords = d.keywords || [];
+  if (d && d.button_set) currentButtonSet = d.button_set;
   updateModeButtons();
+  updateButtonSetButtons(currentButtonSet);
+  applyMode(currentMode);
+  applyCounters(currentMode, currentButtonSet);
+
   const kwInput = document.getElementById('keywords-input');
   if (kwInput && document.activeElement !== kwInput) {
     kwInput.value = currentKeywords.join(', ');
   }
   const vb = document.getElementById('voice-check');
   if (vb) vb.checked = !!d.voice_enabled;
-  const qb = document.getElementById('quiz-builder');
-  if (qb) qb.style.display = (currentMode === 'quiz') ? 'block' : 'none';
-  if (d && d.button_set) {
-  updateButtonSetButtons(d.button_set);
-  }
-  
 });
-
-function updateModeButtons() {
-  ['buttons', 'text', 'both', 'quiz'].forEach(m => {
-    const btn = document.getElementById('mode-' + m);
-    if (btn) btn.classList.toggle('active', m === currentMode);
-  });
-}
 
 window.sendMode = function(mode) {
   socket.emit('set_mode', { code: CODE, mode: mode });
 };
-
 window.sendKeywords = function(kws) {
   socket.emit('set_keywords', { code: CODE, keywords: kws });
 };
-
 window.sendVoiceEnabled = function(enabled) {
   socket.emit('set_voice_enabled', { code: CODE, enabled: enabled });
 };
 
 function render() {
   const map = document.getElementById('map');
+  if (!map) return;
   map.innerHTML = '';
   let g=0, y=0, r=0, none=0;
   let present = 0, hands = 0, unfocused = 0;
   const total = Object.keys(students).length;
   const showText = (currentMode === 'text' || currentMode === 'both');
   const showQuiz = (currentMode === 'quiz');
-  map.classList.toggle('with-text', showText || showQuiz);
+
+  // Для квиза — считаем правильно/неправильно
+  let quizCorrect = 0, quizWrong = 0, quizNoAnswer = 0;
 
   for (const [key, s] of Object.entries(students)) {
     if (key.startsWith('__')) continue;
     const c = s.color || 'none';
-    if (c==='green') g++; else if (c==='yellow') y++; else if (c==='red') r++; else none++;
+    if (showQuiz) {
+      if (s.quiz_choice === null || s.quiz_choice === undefined) {
+        quizNoAnswer++;
+      } else if (currentQuizCorrect !== null && s.quiz_choice === currentQuizCorrect) {
+        quizCorrect++;
+      } else {
+        quizWrong++;
+      }
+    } else {
+      if (c==='green') g++; else if (c==='yellow') y++; else if (c==='red') r++; else none++;
+    }
     if (s.focused !== false) present++;
     else unfocused++;
     if (s.hand) hands++;
 
     const el = document.createElement('div');
-    el.className = 'card-student ' + c;
+    el.className = 'student ' + c;
     if (key === pickedKey) el.classList.add('picked');
     if (s.hand) el.classList.add('hand-raised');
     if (s.focused === false) el.classList.add('unfocused');
-    if (showText || showQuiz) el.classList.add('wide');
     if (lessonClass && s.in_class === false) el.classList.add('not-from-class');
 
-    const nameRow = document.createElement('div');
-    nameRow.className = 'card-name-row';
-
-    if (lessonClass) {
-      if (s.in_class === true) {
-        const b = document.createElement('span');
-        b.className = 'in-class-badge';
-        b.textContent = '✅';
-        b.title = 'Из класса';
-        nameRow.appendChild(b);
-      } else if (s.in_class === false) {
-        const b = document.createElement('span');
-        b.className = 'not-in-class-badge';
-        b.textContent = '⚠️';
-        b.title = 'Не из класса';
-        nameRow.appendChild(b);
-      }
-    }
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'card-name';
-    nameSpan.textContent = anonymous ? 'Ученик ' + s.anon_num : s.name;
-    nameRow.appendChild(nameSpan);
-
-    if (s.hand) {
-      const b = document.createElement('span');
-      b.className = 'hand-badge';
-      b.textContent = '✋';
-      nameRow.appendChild(b);
-    }
-    if (s.focused === false) {
-      const b = document.createElement('span');
-      b.className = 'unfocused-badge';
-      b.textContent = '👀';
-      nameRow.appendChild(b);
-    }
-    el.appendChild(nameRow);
-
-    if (showQuiz && s.quiz_choice !== null && s.quiz_choice !== undefined) {
-      const txt = document.createElement('div');
-      txt.className = 'card-text';
-      const letters = ['A', 'B', 'C', 'D'];
-      const letter = letters[s.quiz_choice] || '?';
-      const optionText = currentQuizOptions[s.quiz_choice] || '';
-      txt.textContent = `${letter}. ${optionText}`;
-      el.appendChild(txt);
-    } else if (showQuiz) {
-      const txt = document.createElement('div');
-      txt.className = 'card-text empty';
-      txt.textContent = '… ещё не ответил';
-      el.appendChild(txt);
-    }
-
-    if (showText && s.text) {
-      const txt = document.createElement('div');
-      txt.className = 'card-text';
-      txt.innerHTML = highlightKeywords(s.text, currentKeywords);
-      el.appendChild(txt);
-      if (currentKeywords.length && s.matched && s.matched.length) {
-        const meta = document.createElement('div');
-        meta.className = 'card-meta';
-        meta.textContent = '✓ ' + s.matched.join(', ');
-        el.appendChild(meta);
-      }
-    } else if (showText) {
-      const txt = document.createElement('div');
-      txt.className = 'card-text empty';
-      txt.textContent = '… ещё не ответил';
-      el.appendChild(txt);
-    }
-
-    if (s.voice) {
-      const audio = document.createElement('audio');
-      audio.controls = true;
-      audio.src = s.voice;
-      audio.className = 'card-audio';
-      el.appendChild(audio);
-    }
+    // Имя
+    let nameText = anonymous ? 'Ученик ' + s.anon_num : s.name;
+    if (s.hand) nameText += ' ✋';
+    if (s.focused === false) nameText += ' 👀';
+    el.textContent = nameText;
 
     map.appendChild(el);
   }
-  document.getElementById('counter').textContent =
-    `✅${g} 🤔${y} 💥${r} ⏳${none}`;
+
+  // Обновляем счётчики
+  if (showQuiz) {
+    document.getElementById('stat-g-num').textContent = quizCorrect;
+    document.getElementById('stat-y-num').textContent = quizWrong;
+    document.getElementById('stat-r-num').textContent = quizNoAnswer;
+    document.getElementById('stat-n-num').textContent = 0;
+  } else if (currentMode === 'text') {
+    const answered = total - none;
+    document.getElementById('stat-g-num').textContent = answered;
+    document.getElementById('stat-y-num').textContent = none;
+    document.getElementById('stat-r-num').textContent = 0;
+    document.getElementById('stat-n-num').textContent = 0;
+  } else {
+    document.getElementById('stat-g-num').textContent = g;
+    document.getElementById('stat-y-num').textContent = y;
+    document.getElementById('stat-r-num').textContent = r;
+    document.getElementById('stat-n-num').textContent = none;
+  }
+
   document.getElementById('present-count').textContent = present;
   document.getElementById('total-count').textContent = total;
   document.getElementById('hand-count').textContent = hands;
@@ -550,13 +664,9 @@ function renderHistory() {
   });
 }
 
-// ============================================
-// ВОПРОСЫ ОТ УЧЕНИКОВ
-// ============================================
 function renderQuestions() {
   const list = document.getElementById('questions-list');
-  const badge = document.getElementById('questions-tab-badge')
-              || document.getElementById('q-badge');
+  const badge = document.getElementById('questions-tab-badge');
   if (!list) return;
 
   const unread = questions.filter(q => !q.answered).length;
@@ -716,7 +826,6 @@ socket.on('lesson_summary', s => {
       chart.appendChild(row);
     });
   }
- // ===== СОХРАНЕНИЕ УРОКА И ОЦЕНОК В БД =====
   saveLessonAndGrades(s);
 
   modal.style.display = 'flex';
@@ -750,7 +859,7 @@ function downloadCsv() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'brain-detector-report.csv';
+  a.download = 'lumen-report.csv';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -764,9 +873,13 @@ socket.on('state', d => {
   if (d && d.mode) {
     currentMode = d.mode;
     updateModeButtons();
-    const qb = document.getElementById('quiz-builder');
-    if (qb) qb.style.display = (currentMode === 'quiz') ? 'block' : 'none';
+    applyMode(currentMode);
   }
+  if (d && d.button_set) {
+    currentButtonSet = d.button_set;
+    updateButtonSetButtons(currentButtonSet);
+  }
+  applyCounters(currentMode, currentButtonSet);
   if (d && Array.isArray(d.keywords)) {
     currentKeywords = d.keywords;
     const kwInput = document.getElementById('keywords-input');
@@ -779,7 +892,7 @@ socket.on('state', d => {
 });
 
 // ============================================
-// ПАНЕЛЬ ТЕОРИИ
+// ТЕОРИЯ
 // ============================================
 function updateTheoryButton(material) {
   const btn = document.getElementById('theory-toggle-btn');
@@ -819,7 +932,6 @@ function renderTheoryDrawer(material) {
   material.theory.forEach(item => {
     const el = document.createElement('div');
     el.className = 'theory-drawer-item';
-
     let body = '';
     if (item.type === 'note') {
       body = `<div class="theory-content">${renderMarkdownSimple(item.content || '')}</div>`;
@@ -842,7 +954,6 @@ function renderTheoryDrawer(material) {
         </div>
       </a>`;
     }
-
     el.innerHTML = `
       <div class="theory-drawer-title">${escapeHtml(item.title || 'Без названия')}</div>
       ${body}
@@ -878,10 +989,10 @@ function renderMarkdownSimple(text) {
 }
 
 // ============================================
-// ВКЛАДКИ ПАНЕЛИ УЧИТЕЛЯ
+// ВКЛАДКИ
 // ============================================
 window.switchTab = function(tab) {
-  document.querySelectorAll('.teacher-tabs .tab-btn').forEach(b => {
+  document.querySelectorAll('.tabs .tab').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
   document.querySelectorAll('.teacher-tab-content').forEach(c => {
@@ -916,7 +1027,7 @@ window.renderGradesTable = function() {
   }
 
   tbody.innerHTML = '';
-  list.forEach((name, i) => {
+  list.forEach((name) => {
     const key = name.trim().toLowerCase();
     const cache = gradeCache[key] || {};
 
@@ -1007,10 +1118,71 @@ render = function() {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  const exportBtn = document.querySelector('#tab-grades .grades-toolbar .btn-invite');
-  if (exportBtn) exportBtn.onclick = exportGradesCsv;
-});
+// ============================================
+// НАСТРОЙКИ (тема + диагностика)
+// ============================================
+window.setTheme = function(theme) {
+  const darkBtn = document.getElementById('theme-dark-btn');
+  const lightBtn = document.getElementById('theme-light-btn');
+  if (theme === 'light') {
+    document.body.classList.add('light');
+    localStorage.setItem('theme', 'light');
+    if (darkBtn) darkBtn.classList.remove('theme-btn-active');
+    if (lightBtn) lightBtn.classList.add('theme-btn-active');
+  } else {
+    document.body.classList.remove('light');
+    localStorage.setItem('theme', 'dark');
+    if (lightBtn) lightBtn.classList.remove('theme-btn-active');
+    if (darkBtn) darkBtn.classList.add('theme-btn-active');
+  }
+};
+
+window.openSettings = function() {
+  document.getElementById('settings-modal').style.display = 'flex';
+  const isLight = document.body.classList.contains('light');
+  const darkBtn = document.getElementById('theme-dark-btn');
+  const lightBtn = document.getElementById('theme-light-btn');
+  if (darkBtn) darkBtn.classList.toggle('theme-btn-active', !isLight);
+  if (lightBtn) lightBtn.classList.toggle('theme-btn-active', isLight);
+  loadDiagnostics();
+};
+
+window.closeSettings = function() {
+  document.getElementById('settings-modal').style.display = 'none';
+};
+
+async function loadDiagnostics() {
+  const content = document.getElementById('diagnostics-content');
+  if (!content) return;
+  content.innerHTML = '<p class="sub">Загрузка…</p>';
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    let html = '';
+    if (data.addresses && data.addresses.length) {
+      data.addresses.forEach(addr => {
+        const icon = addr.available ? '✅' : '❌';
+        const url = addr.url || '—';
+        html += `
+          <div style="margin-bottom: 8px;">
+            ${icon} <b>${escapeHtml(addr.label)}:</b>
+            <span style="font-family: Consolas, monospace; color: ${addr.available ? '#7dffb0' : '#6a7290'};">
+              ${escapeHtml(url)}
+            </span>
+            ${addr.note ? `<div style="font-size: 11px; color: #6a7290; margin-left: 20px;">${escapeHtml(addr.note)}</div>` : ''}
+          </div>
+        `;
+      });
+    } else {
+      html = '<p class="sub">Нет данных</p>';
+    }
+    const ts = data.ts ? new Date(data.ts * 1000).toLocaleTimeString() : '—';
+    html += `<div style="margin-top:10px; font-size:12px; color:#9aa0b4;">Обновлено: ${ts}</div>`;
+    content.innerHTML = html;
+  } catch (e) {
+    content.innerHTML = '<p class="sub">Не удалось загрузить диагностику</p>';
+  }
+}
 
 // ============================================
 // ЗАКРЫТИЕ ПАНЕЛИ ПОСЛЕ УРОКА
@@ -1026,6 +1198,7 @@ window.closeSummaryAndTeacher = function() {
     window.close();
   }
 };
+
 // ============================================
 // ЗАВЕРШЕНИЕ ВОПРОСА
 // ============================================
@@ -1035,34 +1208,21 @@ window.clearQuestion = function() {
 
 socket.on('question_cleared', () => {
   const currentQ = document.getElementById('current-q');
-  if (currentQ) currentQ.textContent = '';
+  if (currentQ) { currentQ.textContent = ''; currentQ.style.display = 'none'; }
   const quizResults = document.getElementById('quiz-results');
   if (quizResults) quizResults.style.display = 'none';
   clearPicked();
 });
-window.setButtonSet = function(buttonSet) {
-  socket.emit('set_button_set', { code: CODE, button_set: buttonSet });
-  updateButtonSetButtons(buttonSet);
-};
 
-function updateButtonSetButtons(set) {
-  const bs = set || 'understanding';
-  const btnUnderstanding = document.getElementById('bset-understanding');
-  const btnYesno = document.getElementById('bset-yesno');
-  if (btnUnderstanding) btnUnderstanding.classList.toggle('active', bs === 'understanding');
-  if (btnYesno) btnYesno.classList.toggle('active', bs === 'yesno');
-}
 // ============================================
 // СОХРАНЕНИЕ УРОКА И ОЦЕНОК В БД
 // ============================================
 async function saveLessonAndGrades(summary) {
-  // Если нет window.api — мы в браузере, а не в Electron — просто пропускаем
   if (!window.api || !window.api.createLesson) {
     console.warn('[Save] window.api недоступен — пропускаем сохранение');
     return;
   }
   try {
-    // 1. Создаём урок
     const lesson = await window.api.createLesson({
       title: summary.material_title || 'Урок',
       code: CODE,
@@ -1070,9 +1230,6 @@ async function saveLessonAndGrades(summary) {
       class_id: summary.class_id || null,
     });
     currentLessonId = lesson?.id || null;
-    console.log('[Save] Урок создан:', lesson);
-
-    // 2. Финализируем урок
     if (currentLessonId) {
       await window.api.finishLesson(currentLessonId, {
         total_questions: summary.total_questions || 0,
@@ -1080,14 +1237,9 @@ async function saveLessonAndGrades(summary) {
         avg_green_pct: summary.avg_green_pct || 0,
       });
     }
-
-    // 3. Сохраняем оценки
-    // Собираем оценки из gradeCache (если учитель что-то выставил)
     if (currentLessonId && Object.keys(gradeCache).length > 0) {
       const gradesMap = {};
       Object.entries(gradeCache).forEach(([key, cache]) => {
-        // Ключ — нормализованное имя, но нам нужно полное имя
-        // Найдём полное имя в lessonClass.students или students
         let fullName = key;
         if (lessonClass && lessonClass.students) {
           const found = lessonClass.students.find(n => n.trim().toLowerCase() === key);
@@ -1101,9 +1253,148 @@ async function saveLessonAndGrades(summary) {
         };
       });
       await window.api.saveGradesBulk(currentLessonId, gradesMap);
-      console.log('[Save] Оценки сохранены:', Object.keys(gradesMap).length);
     }
   } catch (e) {
     console.error('[Save] Ошибка сохранения:', e);
   }
+}
+// Заполнить ссылку-приглашение (CloudPub или локальная)
+function updateInviteLink() {
+  const linkEl = document.getElementById('invite-link');
+  if (!linkEl) return;
+  const base = (typeof CLOUDPUB_URL !== 'undefined' && CLOUDPUB_URL)
+    ? CLOUDPUB_URL
+    : window.location.origin;
+  linkEl.textContent = base + '/join/' + INVITE_TOKEN;
+}
+
+// При загрузке
+document.addEventListener('DOMContentLoaded', updateInviteLink);
+
+// При обновлении CloudPub URL (если сервер пришлёт событие)
+socket.on('cloudpub_update', (data) => {
+  if (data && data.url) {
+    window.CLOUDPUB_URL = data.url;
+    updateInviteLink();
+  }
+});
+function copyInvite() {
+  const linkEl = document.getElementById('invite-link');
+  const text = linkEl ? linkEl.textContent : '';
+  if (!text || text === '—') return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    // Анимация кнопки
+    const btn = document.getElementById('copy-invite-btn');
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✅';
+      btn.style.background = 'rgba(74, 222, 128, 0.2)';
+      btn.style.borderColor = 'rgba(74, 222, 128, 0.6)';
+      btn.style.color = '#4ade80';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 1500);
+    }
+    // Toast
+    showCopyToast('✅ Ссылка скопирована!');
+  }).catch(() => prompt('Скопируй вручную:', text));
+}
+
+// Универсальный toast для копирования
+function showCopyToast(message) {
+  // Удалить старый, если есть
+  const old = document.getElementById('copy-toast');
+  if (old) old.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'copy-toast';
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: linear-gradient(135deg, #7c5cff, #4a7dff);
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 12px 40px rgba(124, 92, 255, 0.5);
+    z-index: 3000;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  `;
+  document.body.appendChild(toast);
+
+  // Анимация появления
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+
+  // Исчезновение через 2 сек
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+window.toggleInviteQr = function() {
+  const box = document.getElementById('invite-qr-box');
+  const img = document.getElementById('invite-qr-img');
+  if (!box || !img) {
+    console.warn('[QR] Элементы #invite-qr-box или #invite-qr-img не найдены');
+    return;
+  }
+  if (box.style.display === 'none' || box.style.display === '') {
+    img.src = '/qr-join/' + INVITE_TOKEN + '?t=' + Date.now();
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+};
+window.applyKeywords = function() {
+  const kwInput = document.getElementById('keywords-input');
+  if (!kwInput) return;
+  const kws = kwInput.value.split(',').map(s => s.trim()).filter(Boolean);
+  socket.emit('set_keywords', { code: CODE, keywords: kws });
+  // Визуальный отклик
+  const btn = event && event.target;
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Применено';
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+  }
+};
+
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ
+// ============================================
+applyMode('buttons');
+applyCounters('buttons', 'understanding');
+// Отправка ключевых слов при вводе (Enter или потеря фокуса)
+const kwInput = document.getElementById('keywords-input');
+if (kwInput) {
+  const sendKws = () => {
+    const kws = kwInput.value.split(',').map(s => s.trim()).filter(Boolean);
+    socket.emit('set_keywords', { code: CODE, keywords: kws });
+  };
+  kwInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendKws(); }
+  });
+  kwInput.addEventListener('blur', sendKws);
+}
+// В конце файла, после applyCounters
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  const lightBtn = document.getElementById('theme-light-btn');
+  if (lightBtn) lightBtn.classList.add('theme-btn-active');
+  const darkBtn = document.getElementById('theme-dark-btn');
+  if (darkBtn) darkBtn.classList.remove('theme-btn-active');
 }

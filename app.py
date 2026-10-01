@@ -258,7 +258,9 @@ def join_enter(token):
 @app.route('/qr')
 def qr():
     base = get_cloudpub_url()
-    if not base: return "CloudPub URL не установлен", 503
+    if not base:
+        local_ip = get_local_ip()
+        base = f"http://{local_ip}:5000"
     img = qrcode.make(f"{base}/student")
     buf = BytesIO(); img.save(buf, format='PNG'); buf.seek(0)
     return send_file(buf, mimetype='image/png')
@@ -266,7 +268,9 @@ def qr():
 @app.route('/qr-join/<token>')
 def qr_join(token):
     base = get_cloudpub_url()
-    if not base: return "CloudPub URL не установлен", 503
+    if not base:
+        local_ip = get_local_ip()
+        base = f"http://{local_ip}:5000"
     img = qrcode.make(f"{base}/join/{token}")
     buf = BytesIO(); img.save(buf, format='PNG'); buf.seek(0)
     return send_file(buf, mimetype='image/png')
